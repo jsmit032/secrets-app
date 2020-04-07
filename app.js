@@ -27,7 +27,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect('mongodb://localhost:27017/userDB', {useNewUrlParser: true, useUnifiedTopology: true});
+const login = "mongodb+srv://admin-jennifer:";
+const end = "@cluster0-h5qrt.mongodb.net/";
+const database = "userDB";
+const pw = process.env.MONGODB;
+
+mongoose.connect(login + pw + end + database, {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set('useCreateIndex', true);
 
 const userSchema = new mongoose.Schema ({
@@ -74,7 +79,6 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://localhost:3000/auth/facebook/secrets"
   },
   function(accessToken, refreshToken, profile, cb) {
-    console.log(profile);
     User.findOrCreate({ facebookId: profile.id }, function (err, user) {
       return cb(err, user);
     });
@@ -190,7 +194,11 @@ app.post('/submit', function(req, res){
   });
 });
 
+let port = process.env.PORT;
+if (port == null | port == "") {
+  port = 3000;
+}
 
-app.listen(3000, function(){
+app.listen(port, function(){
   console.log("Server started on port 3000");
 });
