@@ -102,6 +102,14 @@ app.post("/login", function(req, res){
 
 });
 
+app.get('/submit', function(req, res){
+  if (req.isAuthenticated()){
+    res.render('submit');
+  } else {
+    res.redirect('/login');
+  }
+});
+
 
 app.listen(3000, function(){
   console.log("Server started on port 3000");
