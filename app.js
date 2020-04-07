@@ -5,7 +5,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
-const md5 = require('md5');
+const bcyrpt = require('bcrypt');
+const saltRounds = 10;
 
 const app = express();
 
@@ -33,29 +34,30 @@ app.get('/register', function(req, res){
 
 app.post('/register', function(req, res){
   const userName = req.body.username;
-  const password = md5(req.body.password);
 
-  var newUser = new User({
-    email: userName,
-    password: password
-  });
+  bcyrpt.hash(req.body.password, saltRounds, function(err, hash){
+    var newUser = new User({
+      email: userName,
+      password: hash
+    });
 
-  User.findOne({email: userName}, function(err, foundUser){
-    if (!err) {
-      if (!foundUser) {
-        newUser.save(function(err){
-          if (!err)
-            {
-              res.render('secrets');
-            } else {
-              console.log(err);
-            }
-        });
-      } else {
-        res.redirect('/register');
-        console.log("There's already a user with this e-mail. Please provide a different e-mail address!");
+    User.findOne({email: userName}, function(err, foundUser){
+      if (!err) {
+        if (!foundUser) {
+          newUser.save(function(err){
+            if (!err)
+              {
+                res.render('secrets');
+              } else {
+                console.log(err);
+              }
+          });
+        } else {
+          res.redirect('/register');
+          console.log("There's already a user with this e-mail. Please provide a different e-mail address!");
+        }
       }
-    }
+    });
   });
 });
 
@@ -65,18 +67,18 @@ app.get('/login', function(req, res){
 
 app.post('/login', function(req, res){
   const userName = req.body.username;
-  const password = md5(req.body.password);
+  const password = req.body.password;
 
   User.findOne({email: userName}, function(err, foundUser){
     if (!err) {
       if (!foundUser) {
         console.log("This user doesn't exisit, please register to login");
       } else {
-        if (password === foundUser.password) {
-          res.render('secrets');
-        } else {
-          console.log("Either username or password is incorrect, please try again.");
-        }
+        bcyrpt.compare(password, foundUser.password, function(err, result){
+          if (result === true) {
+            res.render('secrets');
+          }
+        });
       }
     } else {
       console.log(err);
