@@ -27,7 +27,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect('mongodb://localhost:27017/userDB', {useNewUrlParser: true, useUnifiedTopology: true});
+const login = "mongodb+srv://admin-jennifer:";
+const end = "@cluster0-h5qrt.mongodb.net/";
+const database = "userDB";
+const pw = process.env.MONGODB;
+
+mongoose.connect(login + pw + end + database, {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set('useCreateIndex', true);
 
 const userSchema = new mongoose.Schema ({
@@ -62,7 +67,7 @@ passport.use(new GoogleStrategy({
     userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
   },
   function(accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+    User.findOrCreate({ googleId: profile.id}, function (err, user) {
       return cb(err, user);
     });
   }
@@ -74,12 +79,12 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://localhost:3000/auth/facebook/secrets"
   },
   function(accessToken, refreshToken, profile, cb) {
-    console.log(profile);
-    User.findOrCreate({ facebookId: profile.id }, function (err, user) {
+    User.findOrCreate({ facebookId: profile.id}, function (err, user) {
       return cb(err, user);
     });
   }
 ));
+
 
 // Routes
 app.get('/', function(req, res){
@@ -154,7 +159,7 @@ app.post("/login", function(req, res){
 
   req.login(user, function(err){
     if (err) {
-      console.log(err);
+      res.redirect('/login');
     } else {
       passport.authenticate("local")(req, res, function(){
         res.redirect("/secrets");
@@ -191,8 +196,8 @@ app.post('/submit', function(req, res){
 });
 
 let port = process.env.PORT;
-if (port == null || port == "") {
-  port = 8000;
+if (port == null | port == "") {
+  port = 3000;
 }
 
 app.listen(port, function(){
