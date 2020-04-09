@@ -36,10 +36,7 @@ mongoose.connect(login + pw + end + database, {useNewUrlParser: true, useUnified
 mongoose.set('useCreateIndex', true);
 
 const userSchema = new mongoose.Schema ({
-    email: {
-      type: String,
-      unique: false
-    },
+    email: String,
     password: String,
     googleId: String,
     facebookId: String,
@@ -51,11 +48,18 @@ userSchema.plugin(findOrCreate);
 
 const User = new mongoose.model('User', userSchema);
 
-// Dropping an Index in MongoDB
-User.collection.dropIndex( { "username" : 1 } , function(err, res) {
-    if (err) {
-        console.log('Error in dropping index!', err);
-    }
+User.collection.indexExists({ "username" : 1 }, function(err, results){
+  console.log(results);
+  if ( results === true) {
+    // Dropping an Index in MongoDB
+    User.collection.dropIndex( { "username" : 1 } , function(err, res) {
+        if (err) {
+            console.log('Error in dropping index!', err);
+        }
+    });
+  } else {
+    console.log("Index doesn't exisit!");
+  }
 });
 
 passport.use(User.createStrategy());
@@ -79,7 +83,6 @@ passport.use(new GoogleStrategy({
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ googleId: profile.id}, function (err, user) {
-      console.log("Google: " + user);
       return cb(err, user);
     });
   }
@@ -93,7 +96,6 @@ passport.use(new FacebookStrategy({
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ facebookId: profile.id}, function (err, user) {
-      console.log("facebook: " + user)
       return cb(err, user);
     });
   }
