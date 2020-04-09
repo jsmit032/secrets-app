@@ -68,6 +68,7 @@ passport.use(new GoogleStrategy({
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ googleId: profile.id}, function (err, user) {
+      User.dropIndex("username_1");
       return cb(err, user);
     });
   }
@@ -80,11 +81,11 @@ passport.use(new FacebookStrategy({
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ facebookId: profile.id}, function (err, user) {
+      User.dropIndex("username_1");
       return cb(err, user);
     });
   }
 ));
-
 
 // Routes
 app.get('/', function(req, res){
