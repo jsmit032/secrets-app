@@ -36,7 +36,10 @@ mongoose.connect(login + pw + end + database, {useNewUrlParser: true, useUnified
 mongoose.set('useCreateIndex', true);
 
 const userSchema = new mongoose.Schema ({
-    email: String,
+    email: {
+      type: String,
+      unique: false
+    },
     password: String,
     googleId: String,
     facebookId: String,
@@ -47,6 +50,13 @@ userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
 
 const User = new mongoose.model('User', userSchema);
+
+// Dropping an Index in MongoDB
+User.collection.dropIndex( { "username" : 1 } , function(err, res) {
+    if (err) {
+        console.log('Error in dropping index!', err);
+    }
+});
 
 passport.use(User.createStrategy());
 
@@ -64,11 +74,12 @@ passport.use(new GoogleStrategy({
     clientID: process.env.CLIENTID,
     clientSecret: process.env.CLIENTSECRET,
     callbackURL: "https://gentle-taiga-85346.herokuapp.com/auth/google/secrets",
+    //callbackURL: "http://localhost:3000/auth/google/secrets",
     userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo'
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ googleId: profile.id}, function (err, user) {
-      User.dropIndex("username_1");
+      console.log("Google: " + user);
       return cb(err, user);
     });
   }
@@ -77,11 +88,12 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FBAPPID,
     clientSecret: process.env.FBSECRET,
+    //callbackURL: "http://localhost:3000/auth/facebook/secrets",
     callbackURL: "https://gentle-taiga-85346.herokuapp.com/auth/facebook/secrets"
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ facebookId: profile.id}, function (err, user) {
-      User.dropIndex("username_1");
+      console.log("facebook: " + user)
       return cb(err, user);
     });
   }
@@ -134,7 +146,7 @@ app.get("/logout", function(req, res){
 
 app.post("/register", function(req, res){
 
-  User.register({username: req.body.username}, req.body.password, function(err, user){
+  User.register({email: req.body.username}, req.body.password, function(err, user){
     if (err) {
       console.log(err);
       res.redirect("/register");
@@ -154,7 +166,7 @@ app.get('/login', function(req, res){
 app.post("/login", function(req, res){
 
   const user = new User({
-    username: req.body.username,
+    email: req.body.username,
     password: req.body.password
   });
 
