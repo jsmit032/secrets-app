@@ -174,6 +174,7 @@ app.post("/login", function(req, res){
 
   req.login(user, function(err){
     if (err) {
+      console.log(err);
       res.redirect('/login');
     } else {
       passport.authenticate("local")(req, res, function(){
@@ -208,6 +209,10 @@ app.post('/submit', function(req, res){
       }
     }
   });
+});
+
+app.get('/privacy-policy', function(req, res){
+  res.render('privacy-policy');
 });
 
 let port = process.env.PORT;
